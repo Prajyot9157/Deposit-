@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern UPI Payment Gateway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #8A2BE2 0%, #6A0DAD 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #8A2BE2 0%, #6A0DAD 100%);
+            color: white;
+            padding: 30px 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            animation: pulse 8s infinite linear;
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #6A0DAD;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #8A2BE2;
+        }
+        
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        .amount-btn {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            padding: 20px 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .amount-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            border-color: #8A2BE2;
+        }
+        
+        .amount-btn.selected {
+            background: linear-gradient(135deg, #8A2BE2 0%, #6A0DAD 100%);
+            color: white;
+            border-color: #8A2BE2;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(138, 43, 226, 0.3);
+            animation: pulseSelect 0.5s ease;
+        }
+        
+        @keyframes pulseSelect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1.05); }
+        }
+        
+        .amount-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .amount-btn:hover::after {
+            opacity: 1;
+        }
+        
+        .balance-display {
+            background: linear-gradient(135deg, #8A2BE2 0%, #6A0DAD 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .balance-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .upi-display {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .upi-id {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin: 20px 0;
+            letter-spacing: 1px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px dashed #8A2BE2;
+            font-family: 'Courier New', monospace;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(138, 43, 226, 0.5); }
+            to { box-shadow: 0 0 15px rgba(138, 43, 226, 0.8); }
+        }
+        
+        .payment-code {
+            font-size: 18px;
+            font-weight: 600;
+            color: #8A2BE2;
+            margin: 15px 0;
+            background: rgba(138, 43, 226, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        .timer {
+            font-size: 20px;
+            color: #e74c3c;
+            margin: 15px 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .timer i {
+            animation: pulse 1.5s infinite;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #8A2BE2 0%, #6A0DAD 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #a8a8a8 0%, #7a7a7a 100%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .action-btn.secondary:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #555;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .success-message i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        @media (max-width: 480px) {
+            .amount-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 26px;
+            }
+            
+            .upi-id {
+                font-size: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #8A2BE2;
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="sound-toggle" id="soundToggle">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <h1>UPI Payment Gateway</h1>
+            <p>Secure & Instant Payments</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-indian-rupee-sign"></i> Select Amount</h2>
+                <div class="amount-grid">
+                    <div class="amount-btn" data-amount="50">₹50</div>
+                    <div class="amount-btn" data-amount="100">₹100</div>
+                    <div class="amount-btn" data-amount="150">₹150</div>
+                    <div class="amount-btn" data-amount="200">₹200</div>
+                    <div class="amount-btn" data-amount="250">₹250</div>
+                    <div class="amount-btn" data-amount="300">₹300</div>
+                    <div class="amount-btn" data-amount="350">₹350</div>
+                    <div class="amount-btn" data-amount="400">₹400</div>
+                </div>
+            </div>
+            
+            <div class="balance-display">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-amount" id="balanceAmount">₹124</div>
+            </div>
+            
+            <div class="upi-display" id="upiDisplay">
+                <h2 class="section-title"><i class="fas fa-qrcode"></i> Pay Using UPI</h2>
+                <p>Send payment to this UPI ID:</p>
+                <div class="upi-id" id="upiId">Loading...</div>
+                
+                <div class="payment-code" id="paymentCode">
+                    Payment Code: TXN-7834
+                </div>
+                
+                <div class="timer"><i class="fas fa-clock"></i> <span id="timer">04:00</span></div>
+                <p>This UPI ID will change in <span id="countdown">4 minutes</span></p>
+                
+                <button class="action-btn" id="payButton">
+                    <i class="fas fa-mobile-alt"></i> Pay Now with UPI App
+                </button>
+                <button class="action-btn secondary" id="copyButton">
+                    <i class="far fa-copy"></i> Copy UPI ID
+                </button>
+                <button class="action-btn secondary" id="copyCodeButton">
+                    <i class="fas fa-hashtag"></i> Copy Payment Code
+                </button>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Payment Instructions:</h3>
+                <ol>
+                    <li>Select an amount from the grid above</li>
+                    <li>Copy the UPI ID or click "Pay Now" to open your UPI app</li>
+                    <li>Include the Payment Code in the transaction note</li>
+                    <li>Complete the payment in your UPI app</li>
+                    <li>The UPI ID will automatically change after 4 minutes</li>
+                </ol>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i>
+                Payment initiated successfully! Please complete the transaction in your UPI app.
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">UPI ID copied to clipboard!</span>
+    </div>
+
+    <audio id="clickSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/247/247-preview.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="successSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/257/257-preview.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="countdownSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/250/250-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // UPI IDs array
+            const upiIds = [
+                "7048596598@nyes",
+                "7048596598@ybl",
+                "9157042437@ybl",
+                "9157042437@fam"
+            ];
+            
+            // Elements
+            const amountButtons = document.querySelectorAll('.amount-btn');
+            const upiDisplay = document.getElementById('upiDisplay');
+            const upiIdElement = document.getElementById('upiId');
+            const paymentCodeElement = document.getElementById('paymentCode');
+            const timerElement = document.getElementById('timer');
+            const countdownElement = document.getElementById('countdown');
+            const payButton = document.getElementById('payButton');
+            const copyButton = document.getElementById('copyButton');
+            const copyCodeButton = document.getElementById('copyCodeButton');
+            const successMessage = document.getElementById('successMessage');
+            const balanceAmount = document.getElementById('balanceAmount');
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            const soundToggle = document.getElementById('soundToggle');
+            const clickSound = document.getElementById('clickSound');
+            const successSound = document.getElementById('successSound');
+            const countdownSound = document.getElementById('countdownSound');
+            
+            // Variables
+            let selectedAmount = null;
+            let currentUpiIndex = 0;
+            let countdownInterval;
+            let timeLeft = 240; // 4 minutes in seconds
+            let soundEnabled = true;
+            let totalBalance = 12450;
+            let paymentCode = generatePaymentCode();
+            
+            // Initialize with first UPI ID
+            upiIdElement.textContent = upiIds[currentUpiIndex];
+            paymentCodeElement.textContent = `Payment Code: ${paymentCode}`;
+            
+            // Generate unique payment code
+            function generatePaymentCode() {
+                const prefix = "TXN";
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                return `${prefix}-${randomNum}`;
+            }
+            
+            // Sound toggle
+            soundToggle.addEventListener('click', function() {
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) {
+                    soundToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    playSound(clickSound);
+                } else {
+                    soundToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                }
+            });
+            
+            // Play sound function
+            function playSound(sound) {
+                if (soundEnabled) {
+                    sound.currentTime = 0;
+                    sound.play().catch(e => console.log("Audio play failed:", e));
+                }
+            }
+            
+            // Show notification
+            function showNotification(message, type = 'info') {
+                notificationText.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Amount selection
+            amountButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    playSound(clickSound);
+                    
+                    // Remove selected class from all buttons
+                    amountButtons.forEach(btn => btn.classList.remove('selected'));
+                    
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    
+                    // Set selected amount
+                    selectedAmount = this.getAttribute('data-amount');
+                    
+                    // Generate new payment code
+                    paymentCode = generatePaymentCode();
+                    paymentCodeElement.textContent = `Payment Code: ${paymentCode}`;
+                    
+                    // Show UPI display
+                    upiDisplay.style.display = 'block';
+                    
+                    // Reset and start countdown
+                    resetCountdown();
+                    startCountdown();
+                    
+                    // Scroll to UPI display
+                    upiDisplay.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+            
+            // Countdown functions
+            function startCountdown() {
+                clearInterval(countdownInterval);
+                
+                countdownInterval = setInterval(function() {
+                    timeLeft--;
+                    
+                    if (timeLeft <= 10 && timeLeft > 0) {
+                        playSound(countdownSound);
+                    }
+                    
+                    if (timeLeft <= 0) {
+                        // Change UPI ID
+                        currentUpiIndex = (currentUpiIndex + 1) % upiIds.length;
+                        upiIdElement.textContent = upiIds[currentUpiIndex];
+                        
+                        // Generate new payment code
+                        paymentCode = generatePaymentCode();
+                        paymentCodeElement.textContent = `Payment Code: ${paymentCode}`;
+                        
+                        // Play success sound
+                        playSound(successSound);
+                        
+                        // Reset countdown
+                        resetCountdown();
+                        
+                        // Show success message
+                        successMessage.style.display = 'block';
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                        }, 4000);
+                    } else {
+                        updateTimerDisplay();
+                    }
+                }, 1000);
+            }
+            
+            function resetCountdown() {
+                timeLeft = 240;
+                updateTimerDisplay();
+            }
+            
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const minutesText = minutes === 1 ? 'minute' : 'minutes';
+                countdownElement.textContent = `${minutes} ${minutesText}`;
+            }
+            
+            // Pay with UPI app
+            payButton.addEventListener('click', function() {
+                playSound(clickSound);
+                
+                if (!selectedAmount) {
+                    showNotification('Please select an amount first', 'info');
+                    return;
+                }
+                
+                // Create UPI payment URL
+                const upiUrl = `upi://pay?pa=${upiIds[currentUpiIndex]}&pn=Merchant&am=${selectedAmount}&cu=INR&tn=Payment Code: ${paymentCode}`;
+                
+                // Try to open UPI app
+                window.location.href = upiUrl;
+                
+                // Update balance (simulate payment)
+                totalBalance += parseInt(selectedAmount);
+                balanceAmount.textContent = `₹${totalBalance.toLocaleString('en-IN')}`;
+                
+                // Fallback: If UPI app not available, show alert
+                setTimeout(function() {
+                    if (document.hidden || document.webkitHidden) {
+                        // App opened successfully
+                        playSound(successSound);
+                        successMessage.style.display = 'block';
+                    } else {
+                        showNotification('UPI app not found. Please copy the UPI ID and make payment manually.', 'info');
+                    }
+                }, 500);
+            });
+            
+            // Copy UPI ID
+            copyButton.addEventListener('click', function() {
+                playSound(clickSound);
+                const upiId = upiIdElement.textContent;
+                
+                // Use Clipboard API if available
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(upiId)
+                        .then(() => {
+                            showNotification('UPI ID copied to clipboard!', 'success');
+                        })
+                        .catch(err => {
+                            fallbackCopyText(upiId);
+                        });
+                } else {
+                    fallbackCopyText(upiId);
+                }
+            });
+            
+            // Copy Payment Code
+            copyCodeButton.addEventListener('click', function() {
+                playSound(clickSound);
+                
+                // Use Clipboard API if available
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(paymentCode)
+                        .then(() => {
+                            showNotification('Payment Code copied to clipboard!', 'success');
+                        })
+                        .catch(err => {
+                            fallbackCopyText(paymentCode);
+                        });
+                } else {
+                    fallbackCopyText(paymentCode);
+                }
+            });
+            
+            // Fallback for copying text
+            function fallbackCopyText(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                showNotification('Text copied to clipboard!', 'success');
+            }
+            
+            // Initialize timer display
+            updateTimerDisplay();
+        });
+    </script>
+</body>
+</html>
